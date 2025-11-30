@@ -1,131 +1,105 @@
 # Marea Austral - Backend API Service
+
 <p align="left">
-  <img src="https://img.shields.io/badge/estado-activo-success.svg" alt="Estado del proyecto">
-  <img src="https://img.shields.io/badge/backend-Node.js-339933?style=flat&logo=nodedotjs" alt="Backend Node">
-  <img src="https://img.shields.io/badge/database-MongoDB-47A248?style=flat&logo=mongodb" alt="DB Mongo">
-  <img src="https://img.shields.io/badge/language-JavaScript-F7DF1E?logo=javascript&logoColor=black" alt="Lenguaje JS">
+  <img src="https://img.shields.io/badge/status-active-success.svg" alt="Estado">
+  <img src="https://img.shields.io/badge/backend-Node.js-339933?style=flat&logo=nodedotjs" alt="Node.js">
+  <img src="https://img.shields.io/badge/database-MongoDB-47A248?style=flat&logo=mongodb" alt="MongoDB">
+  <img src="https://img.shields.io/badge/cloud-Render-46E3B7?style=flat&logo=render" alt="Render">
 </p>
 
-Este repositorio contiene el **Servidor Backend** para la aplicación móvil "Marea Austral".
+Este repositorio contiene el **Servidor Backend** y la API RESTful para la aplicación móvil "Marea Austral".
 
-Su función principal es actuar como la "Fuente de la Verdad" en la nube, permitiendo la sincronización de datos (viajes, mantenimientos y usuarios) desde los dispositivos móviles para garantizar persistencia externa, gestión de roles y respaldo seguro de la información.
+Actúa como la fuente de verdad en la nube, gestionando la sincronización de datos bidireccional, la persistencia de rutas GPS complejas y la administración de roles de usuario.
 
-## ✨ Características Principales
+## 📡 Base URL (Despliegue)
+El servicio se encuentra desplegado y activo en **Render**:
+> **`https://backend-marea-austral.onrender.com/`**
 
-- **API RESTful:** Arquitectura de microservicios organizada por dominios (Auth, Trips, Maintenance).
-- **Gestión de Roles:** Sincronización con Firebase Auth para asignar y persistir roles de usuario (`capitan`, `tripulante`, `fiscalizador`, `invitado`) cumpliendo requisitos de negocio.
-- **Base de Datos NoSQL:** Utiliza **MongoDB Atlas** para almacenar estructuras de datos complejas y flexibles, como las rutas GPS de los viajes (arrays de coordenadas).
-- **Sincronización de Bitácora:** Recepción y almacenamiento de viajes náuticos con sus estadísticas (duración, distancia) y trazado geoespacial.
-- **Gestión de Mantenimiento:** Operaciones CRUD completas para el registro de servicios mecánicos, vinculados unívocamente al `userId` del propietario.
-- **Seguridad:** Manejo de variables de entorno (`dotenv`) para proteger credenciales de base de datos y configuración del puerto.
+## ✨ Características Técnicas
 
-## 🚀 Stack Tecnológico
-<p align="left">
-  <a href="https://skillicons.dev">
-    <img src="https://skillicons.dev/icons?i=nodejs,express,mongodb,js,postman" />
-  </a>
-</p>
+* **Arquitectura REST:** Endpoints organizados por recursos (`auth`, `trips`, `maintenance`).
+* **Persistencia NoSQL:** Uso de **MongoDB Atlas** para almacenar documentos flexibles (como arrays de coordenadas GPS).
+* **Gestión de Roles:** Lógica de negocio para asignar y verificar roles (`capitan`, `navegante`) sincronizados con Firebase Auth.
+* **Sincronización Híbrida:** Diseñado para soportar la arquitectura *Offline-First* de la app móvil, permitiendo subida (POST) y descarga (GET) de historiales.
 
-- **Runtime:** [Node.js](https://nodejs.org/)
-- **Framework Web:** [Express.js](https://expressjs.com/) (Manejo de rutas y middleware)
-- **Base de Datos:** [MongoDB Atlas](https://www.mongodb.com/atlas) (Cluster en la nube AWS)
-- **ODM:** [Mongoose](https://mongoosejs.com/) (Modelado de datos)
-- **Utilidades:**
-    - `cors`: Gestión de acceso cruzado.
-    - `dotenv`: Manejo de variables de entorno.
-    - `nodemon`: Desarrollo ágil con reinicio automático.
+## 🛠️ Stack Tecnológico
 
-## 📂 Estructura del Proyecto
-El backend sigue el patrón MVC (Model-View-Controller) adaptado a API para mantener el código modular y escalable:
-
-```yaml
-backend-marea-austral/
-├── 📂 src/
-│   ├── 📂 config/
-│   │   └── 📄 db.js              # Conexión a MongoDB Atlas
-│   ├── 📂 controllers/           # Lógica de negocio (Qué hace el sistema)
-│   │   ├── 📄 authController.js
-│   │   ├── 📄 maintenanceController.js
-│   │   └── 📄 tripController.js
-│   ├── 📂 models/                # Esquemas de datos (Mongoose Schemas)
-│   │   ├── 📄 User.js            # Roles y UID
-│   │   ├── 📄 Trip.js            # Viajes y Coordenadas
-│   │   └── 📄 MaintenanceLog.js  # Registros de servicio
-│   ├── 📂 routes/                # Definición de Endpoints (URL)
-│   │   ├── 📄 authRoutes.js
-│   │   ├── 📄 maintenanceRoutes.js
-│   │   └── 📄 tripRoutes.js
-│   └── 📄 app.js                 # Punto de entrada del servidor
-├── 📄 .env                       # Variables de entorno (NO SUBIR A GIT)
-├── 📄 package.json
-└── 📄 README.md
-```
+* **Runtime:** Node.js (v18+)
+* **Framework:** Express.js
+* **Base de Datos:** MongoDB (Mongoose ODM)
+* **Seguridad:** Helmet & Cors
+* **Logs:** Morgan
 
 ## 🔌 Documentación de Endpoints (API)
 
-La API expone los siguientes recursos para el consumo de la aplicación móvil:
+### 1. Autenticación y Usuarios (`/api/auth`)
+Gestiona la identidad y roles de los usuarios.
 
-### 🔐 Autenticación & Usuarios
-| Método | Endpoint | Descripción |
-| :--- | :--- | :--- |
-| `POST` | `/api/auth/sync` | Sincroniza el usuario de Firebase con MongoDB y devuelve su rol asignado. |
+| Método | Endpoint | Descripción | Body (JSON) |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/sync` | Sincroniza usuario Firebase y devuelve su rol. | `{ "firebaseUid": "...", "email": "..." }` |
 
-### ⚓ Bitácora de Viajes
-| Método | Endpoint | Descripción |
-| :--- | :--- | :--- |
-| `POST` | `/api/trips` | Recibe un objeto `NetworkTrip` con la ruta GPS completa y estadísticas. |
-| `GET` | `/api/trips/user/:userId` | Obtiene el historial de viajes de un usuario específico. |
+### 2. Bitácora de Viajes (`/api/trips`)
+Manejo de datos geoespaciales y estadísticas de navegación.
 
-### 🛠️ Mantenimiento
-| Método | Endpoint | Descripción |
-| :--- | :--- | :--- |
-| `POST` | `/api/maintenance` | Crea un nuevo registro de mantenimiento. |
-| `GET` | `/api/maintenance/user/:userId` | Lista los mantenimientos de un usuario. |
-| `DELETE` | `/api/maintenance/:id` | Elimina un registro específico por su ID. |
+| Método | Endpoint | Descripción | Body (JSON) |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/` | Guarda un nuevo viaje con su ruta GPS. | `{ "userId": "...", "routeCoordinates": [...], ... }` |
+| `GET` | `/user/:userId` | Obtiene el historial de viajes de un usuario. | N/A |
 
-## 📋 Prerrequisitos
+### 3. Mantenimiento (`/api/maintenance`)
+Registro de servicios y costos de la embarcación.
 
-Para ejecutar este servidor localmente, necesitas:
+| Método | Endpoint | Descripción | Body (JSON) |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/` | Registra un nuevo mantenimiento. | `{ "description": "...", "cost": 50000, ... }` |
+| `GET` | `/user/:userId` | Obtiene el historial de mantenimientos. | N/A |
 
-* Node.js (v16 o superior)
-* npm (Gestor de paquetes)
-* Una cuenta y cluster activo en MongoDB Atlas.
-
-## ⚙️ Instalación y Despliegue Local
-
-### 1. Clonar e Instalar
-```bash
-git clone [https://github.com/TU_USUARIO/backend-marea-austral.git](https://github.com/TU_USUARIO/backend-marea-austral.git)
-cd backend-marea-austral
-npm install
+## 📦 Estructura del Proyecto
+<details>
+<summary>Haz clic para expandir la estructura de archivos</summary>
+```text
+backend-marea-austral/
+├── src/
+│   ├── config/         # Conexión a BD (Mongoose)
+│   ├── controllers/    # Lógica de los microservicios
+│   ├── models/         # Esquemas de datos (Schemas)
+│   ├── routes/         # Definición de rutas API
+│   └── app.js          # Entry point
+├── .env                # Variables de entorno (Ignorado)
+└── package.json        # Dependencias
 ```
+</details>
 
-### 2. Configurar Variables de Entorno
-Crea un archivo llamado `.env` en la raíz del proyecto y configura tu conexión:
+## 🚀 Instalación y Ejecución Local
 
-```env
-PORT=3000
-# Reemplaza con tu cadena de conexión real de MongoDB Atlas
-MONGO_URI=mongodb+srv://usuario:password@cluster.mongodb.net/marea_austral_db
-```
-### 3. Ejecutar Servidor
-Para desarrollo (con reinicio automático):
+Si deseas correr este servidor en tu máquina local:
 
-```bash
-npx nodemon src/app.js
-```
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone [https://github.com/DavNat13/backend-marea-austral.git](https://github.com/DavNat13/backend-marea-austral.git)
+    cd backend-marea-austral
+    ```
 
-Para producción:
+2.  **Instalar dependencias:**
+    ```bash
+    npm install
+    ```
 
-```bash
-node src/app.js
-```
+3.  **Configurar Variables de Entorno:**
+    Crea un archivo `.env` en la raíz y agrega tu cadena de conexión:
+    ```env
+    PORT=3000
+    MONGO_URI=tu_cadena_de_mongodb_atlas
+    ```
 
-Si todo es correcto, verás en la consola:
+4.  **Ejecutar:**
+    ```bash
+    npm start
+    # O para desarrollo:
+    npm run dev
+    ```
 
-```bash
-🚀 Servidor Marea Austral FULL corriendo en puerto 3000
-🔥 MongoDB Conectado: Nube Atlas activa
-```
-
-Desarrollado por David Nahuelcar Tecas para la asignatura de Desarrollo de Aplicaciones Móviles - Duoc UC Puerto Montt.
+---
+**Desarrollado por:** David Nahuelcar Tecas
+**Asignatura:** Desarrollo de Aplicaciones Móviles - Duoc UC Puerto Montt
